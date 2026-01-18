@@ -69,7 +69,7 @@ npm run mcp
 
 ## Author
 
-Your Name
+Priyesh Nagar
 
 ## License
 
