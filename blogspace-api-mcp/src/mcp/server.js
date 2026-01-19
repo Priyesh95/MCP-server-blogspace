@@ -2,7 +2,9 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import {
     CallToolRequestSchema,
-    ListToolsRequestSchema
+    ListToolsRequestSchema,
+    ListPromptsRequestSchema,
+    GetPromptRequestSchema
 } from '@modelcontextprotocol/sdk/types.js'
 
 // Import our tools
@@ -15,6 +17,9 @@ const tools = [
     getBlogByIdTool
 ]
 
+// Registry of all available prompts
+import { prompts } from './prompts/blogPrompts.js'
+
 const server = new Server(
     {
         name: 'blogspace-mcp-server',
@@ -22,7 +27,8 @@ const server = new Server(
     },
     {
         capabilities: {
-            tools: {}  // Declare that this server supports tools
+            tools: {},    // Declare that this server supports tools
+            prompts: {}   // Declare that this server supports prompts
         }
     }
 )
@@ -92,6 +98,59 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             isError: true
         }
 
+    }
+})
+
+/**
+ * Handle ListPromptsRequest
+ * LLM asks: "What prompts are available?"
+ */
+server.setRequestHandler(ListPromptsRequestSchema, async () => {
+    console.log('💬 Client requested prompt list')
+
+    return {
+        prompts: prompts.map(prompt => ({
+            name: prompt.name,
+            description: prompt.description,
+            arguments: prompt.arguments || []
+        }))
+    }
+})
+
+/**
+ * Handle GetPromptRequest
+ * User selects a prompt and provides arguments
+ */
+server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+    const { name, arguments: args } = request.params
+
+    console.log(`\n💬 Prompt Request: ${name}`)
+    console.log(`📥 Arguments:`, JSON.stringify(args, null, 2))
+
+    // Find the requested prompt
+    const prompt = prompts.find(p => p.name === name)
+
+    if (!prompt) {
+        console.error(`❌ Unknown prompt: ${name}`)
+        throw new Error(`Prompt not found: ${name}`)
+    }
+
+    // Validate required arguments
+    if (prompt.arguments) {
+        for (const arg of prompt.arguments) {
+            if (arg.required && !args[arg.name]) {
+                throw new Error(`Required argument missing: ${arg.name}`)
+            }
+        }
+    }
+
+    try {
+        const result = await prompt.generate(args || {})
+        console.log(`📤 Prompt generated successfully\n`)
+        return result
+    } catch (error) {
+        console.error(`❌ Prompt generation failed:`, error)
+        throw error
     }
 })
 
