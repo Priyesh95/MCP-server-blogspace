@@ -15,7 +15,13 @@ export { getCategoryById, getCategoryBySlug }
 
 // Get all published blogs
 export const getAllBlogs = () => {
-  return blogs.filter(blog => blog.published)
+  return blogs
+    .filter(blog => blog.published)
+    .map(blog => ({
+      ...blog,
+      author: getUserById(blog.authorId),
+      category: getCategoryById(blog.categoryId)
+    }))
 }
 
 // // Get blog by ID

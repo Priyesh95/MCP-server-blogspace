@@ -25,6 +25,15 @@ export const users = [
     avatar: "https://i.pravatar.cc/150?img=12",
     bio: "DevOps engineer and cloud architect. Writing about infrastructure, automation, and best practices.",
     joinedDate: "2024-03-10"
+  },
+  {
+    id: 4,
+    name: "Emily Rodriguez",
+    email: "emily@example.com",
+    password: "password123",
+    avatar: "https://i.pravatar.cc/150?img=10",
+    bio: "Content writer and business strategist. Passionate about health, wellness, and sustainable business practices.",
+    joinedDate: "2024-04-05"
   }
 ]
 
